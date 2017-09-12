@@ -32,9 +32,11 @@ def readMessages():
 
 	subreddit = reddit.subreddit("geoguessr")
 
+	validSubjects = ["postrequest", "postingrequest"]
+
 	# Iterate through the messages
 	for message in messages:
-		if "postrequest" in message.subject.lower().strip().replace(' ', ''):
+		if message.subject.lower().strip().replace(' ', '') in validSubjects:
 			messageContent = [entry.strip() for entry in message.body.split('\n') if entry.strip() is not '']
 
 			# If the message has too few lines then skip it
@@ -47,25 +49,28 @@ def readMessages():
 			if len(messageContent) > 4:
 				messageContent.insert(4, "---")
 
-			messageContent.insert(4, "### [Challenge link](%s)" % messageContent[2])
+			messageContent.insert(4, "### [Challenge link](%s) by %s" % (messageContent[2], message.author.name))
 
 			messageContent.append(getInfoLine())
 
 			if messageContent[0] <= datetime.datetime.now().strftime("%Y-%m-%d %H:%M") <= messageContent[1]:
 				#print(messageContent[4:])
 				postText = ""
-				for message in messageContent[4:]:
-					postText += message + '\n\n'
+				for part in messageContent[4:]:
+					postText += part + '\n\n'
 				print(postText)
 
-				#subreddit.submit(messageContent[2], selftext = postText, send_replies = false)
+				print("Title: " + messageContent[3])
+
+				subreddit.submit(messageContent[3], selftext = postText, send_replies = False)
+				message.mark_read()
 
 
 
 def getInfoLine():
     return """---
 
-^(I'm a bot, message the author: /u/LiquidProgrammer if I made a mistake.) ^[Usage ](I'll make a post soon)."""
+^(I'm a bot, message the author: /u/LiquidProgrammer if I made a mistake.) ^[Usage](https://www.reddit.com/r/geoguessr/comments/6zpgfv/introducing_the_challenge_poster_bot_for_when_you/)."""
 
 if __name__ == '__main__':
     readMessages()

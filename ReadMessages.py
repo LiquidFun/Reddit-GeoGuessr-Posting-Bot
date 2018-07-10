@@ -24,46 +24,48 @@ def getRedditInstance():
 
     return reddit
 
-def readMessages():
-	reddit = getRedditInstance()
+def lookForPostRequests():
+    reddit = getRedditInstance()
 
-	# Get the unread messages from the reddit account
-	messages = [message for message in reddit.inbox.unread()]
+    print("Looking for post requests.")
 
-	subreddit = reddit.subreddit("geoguessr")
+    # Get the unread messages from the reddit account
+    messages = [message for message in reddit.inbox.unread()]
 
-	validSubjects = ["postrequest", "postingrequest"]
+    subreddit = reddit.subreddit("geoguessr")
 
-	# Iterate through the messages
-	for message in messages:
-		if message.subject.lower().strip().replace(' ', '') in validSubjects:
-			messageContent = [entry.strip() for entry in message.body.split('\n') if entry.strip() is not '']
+    validSubjects = ["postrequest", "postingrequest"]
 
-			# If the message has too few lines then skip it
-			if len(messageContent) < 4:
-				print(messageContent)
-				print("Too few lines in post request. Quitting.\n")
-				continue
+    # Iterate through the messages
+    for message in messages:
+        if message.subject.lower().strip().replace(' ', '') in validSubjects:
+            messageContent = [entry.strip() for entry in message.body.split('\n') if entry.strip() is not '']
 
-			# If the message has a message left by the author then post a challenge
-			if len(messageContent) > 4:
-				messageContent.insert(4, "---")
+            # If the message has too few lines then skip it
+            if len(messageContent) < 4:
+                print(messageContent)
+                print("Too few lines in post request. Quitting.\n")
+                continue
 
-			messageContent.insert(4, "### [Challenge link](%s) by %s" % (messageContent[2], message.author.name))
+            # If the message has a message left by the author then post a challenge
+            if len(messageContent) > 4:
+                messageContent.insert(4, "---")
 
-			messageContent.append(getInfoLine())
+            messageContent.insert(4, "### [Challenge link](%s) by /u/%s" % (messageContent[2], message.author.name))
 
-			if messageContent[0] <= datetime.datetime.now().strftime("%Y-%m-%d %H:%M") <= messageContent[1]:
-				#print(messageContent[4:])
-				postText = ""
-				for part in messageContent[4:]:
-					postText += part + '\n\n'
-				print(postText)
+            messageContent.append(getInfoLine())
 
-				print("Title: " + messageContent[3])
+            if messageContent[0] <= datetime.datetime.now().strftime("%Y-%m-%d %H:%M") <= messageContent[1]:
+                #print(messageContent[4:])
+                postText = ""
+                for part in messageContent[4:]:
+                    postText += part + '\n\n'
+                print(postText)
 
-				subreddit.submit(messageContent[3], selftext = postText, send_replies = False)
-				message.mark_read()
+                print("Title: " + messageContent[3])
+
+                subreddit.submit(messageContent[3], selftext = postText, send_replies = False)
+                message.mark_read()
 
 
 
